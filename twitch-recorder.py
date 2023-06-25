@@ -41,6 +41,15 @@ class TwitchResponseStatus(enum.Enum):
     ERROR = 4
 
 
+def get_video_list(recorded_path):
+    videos = []
+    for f in os.listdir(recorded_path):
+        filename = slugify((str(f))[0:10])
+        if os.path.isfile(os.path.join(recorded_path, filename, f)):
+            videos.append(f)
+    return videos
+
+
 class TwitchRecorder:
     def __init__(self):
         # global configuration
@@ -88,13 +97,13 @@ class TwitchRecorder:
 
         # fix videos from previous recording session
         try:
-            video_list = [f for f in os.listdir(recorded_path) if os.path.isfile(os.path.join(recorded_path, f))]
+            video_list = get_video_list(recorded_path)
             if len(video_list) > 0:
                 logging.info("processing previously recorded files")
             for f in video_list:
-                filename = bytes(slugify(f[0:10]), "ascii")
-                recorded_filename = os.path.join(recorded_path, filename, f)
-                processed_filename = os.path.join(processed_path, filename, f)
+                filename = str(f)
+                recorded_filename = os.path.join(recorded_path, filename)
+                processed_filename = os.path.join(processed_path, filename)
                 self.process_recorded_file(recorded_filename, processed_filename)
         except Exception as e:
             logging.error(e)
@@ -165,8 +174,8 @@ class TwitchRecorder:
                     .strftime("%Y-%m-%d %Hh%Mm%Ss") + " - " + channel.get("title") + ".mp4"
 
                 # clean filename from unnecessary characters
-                filename = bytes("".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."]), "ascii")
-                filename_folder = bytes(slugify(filename[0:10]), "ascii")
+                filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
+                filename_folder = slugify(filename[0:10])
 
                 recorded_filename = os.path.join(recorded_path, filename_folder, filename)
                 processed_filename = os.path.join(processed_path, filename_folder, filename)
