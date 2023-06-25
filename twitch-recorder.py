@@ -12,6 +12,26 @@ import requests
 
 import config
 
+import unicodedata
+import re
+
+
+def slugify(value, allow_unicode=False):
+    """
+    Taken from https://github.com/django/django/blob/master/django/utils/text.py
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize('NFKC', value)
+    else:
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
+
 
 class TwitchResponseStatus(enum.Enum):
     ONLINE = 0
@@ -72,8 +92,9 @@ class TwitchRecorder:
             if len(video_list) > 0:
                 logging.info("processing previously recorded files")
             for f in video_list:
-                recorded_filename = os.path.join(recorded_path, f, f)
-                processed_filename = os.path.join(processed_path, f, f)
+                filename = bytes(slugify(f[0:10]), "ascii")
+                recorded_filename = os.path.join(recorded_path, filename, f)
+                processed_filename = os.path.join(processed_path, filename, f)
                 self.process_recorded_file(recorded_filename, processed_filename)
         except Exception as e:
             logging.error(e)
@@ -144,10 +165,11 @@ class TwitchRecorder:
                     .strftime("%Y-%m-%d %Hh%Mm%Ss") + " - " + channel.get("title") + ".mp4"
 
                 # clean filename from unnecessary characters
-                filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
+                filename = bytes("".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."]), "ascii")
+                filename_folder = bytes(slugify(filename[0:10]), "ascii")
 
-                recorded_filename = os.path.join(recorded_path, filename, filename)
-                processed_filename = os.path.join(processed_path, filename, filename)
+                recorded_filename = os.path.join(recorded_path, filename_folder, filename)
+                processed_filename = os.path.join(processed_path, filename_folder, filename)
 
                 # set oauth token if available (to skip ads)
                 auth_header = []
