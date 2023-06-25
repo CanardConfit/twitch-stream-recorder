@@ -72,8 +72,8 @@ class TwitchRecorder:
             if len(video_list) > 0:
                 logging.info("processing previously recorded files")
             for f in video_list:
-                recorded_filename = os.path.join(recorded_path, f)
-                processed_filename = os.path.join(processed_path, f)
+                recorded_filename = os.path.join(recorded_path, f, f)
+                processed_filename = os.path.join(processed_path, f, f)
                 self.process_recorded_file(recorded_filename, processed_filename)
         except Exception as e:
             logging.error(e)
@@ -146,8 +146,8 @@ class TwitchRecorder:
                 # clean filename from unnecessary characters
                 filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
 
-                recorded_filename = os.path.join(recorded_path, filename)
-                processed_filename = os.path.join(processed_path, filename)
+                recorded_filename = os.path.join(recorded_path, filename, filename)
+                processed_filename = os.path.join(processed_path, filename, filename)
 
                 # set oauth token if available (to skip ads)
                 auth_header = []
