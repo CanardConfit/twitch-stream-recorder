@@ -103,6 +103,9 @@ class TwitchRecorder:
             for f in video_list:
                 recorded_filename = os.path.join(recorded_path, f)
                 processed_filename = os.path.join(processed_path, f)
+                processed_folder = os.path.join(processed_path, os.path.dirname(processed_filename))
+                if os.path.exists(processed_folder) is False:
+                    os.makedirs(processed_folder)
                 self.process_recorded_file(recorded_filename, processed_filename)
         except Exception as e:
             logging.error(e)
