@@ -105,7 +105,7 @@ class TwitchRecorder:
             for f in video_list:
                 recorded_filename = os.path.join(recorded_path, f)
                 processed_filename = os.path.join(processed_path, f)
-                recorded_folder = os.path.join(recorded_path, os.path.dirname(processed_filename))
+                recorded_folder = os.path.join(recorded_path, os.path.dirname(recorded_filename))
                 processed_folder = os.path.join(processed_path, os.path.dirname(processed_filename))
                 if os.path.exists(processed_folder) is False:
                     os.makedirs(processed_folder)
