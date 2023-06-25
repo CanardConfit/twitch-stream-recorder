@@ -12,6 +12,26 @@ import requests
 
 import config
 
+import unicodedata
+import re
+
+
+def slugify(value, allow_unicode=False):
+    """
+    Taken from https://github.com/django/django/blob/master/django/utils/text.py
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize('NFKC', value)
+    else:
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
+
 
 class TwitchResponseStatus(enum.Enum):
     ONLINE = 0
@@ -19,6 +39,15 @@ class TwitchResponseStatus(enum.Enum):
     NOT_FOUND = 2
     UNAUTHORIZED = 3
     ERROR = 4
+
+
+def get_video_list(recorded_path):
+    videos = []
+    for f in os.listdir(recorded_path):
+        for f2 in os.listdir(os.path.join(recorded_path, f)):
+            if os.path.isfile(os.path.join(recorded_path, f, f2)):
+                videos.append(os.path.join(f, f2))
+    return videos
 
 
 class TwitchRecorder:
@@ -68,12 +97,15 @@ class TwitchRecorder:
 
         # fix videos from previous recording session
         try:
-            video_list = [f for f in os.listdir(recorded_path) if os.path.isfile(os.path.join(recorded_path, f))]
+            video_list = get_video_list(recorded_path)
             if len(video_list) > 0:
                 logging.info("processing previously recorded files")
             for f in video_list:
                 recorded_filename = os.path.join(recorded_path, f)
                 processed_filename = os.path.join(processed_path, f)
+                processed_folder = os.path.join(processed_path, os.path.dirname(processed_filename))
+                if os.path.exists(processed_folder) is False:
+                    os.makedirs(processed_folder)
                 self.process_recorded_file(recorded_filename, processed_filename)
         except Exception as e:
             logging.error(e)
@@ -140,14 +172,16 @@ class TwitchRecorder:
 
                 channels = info["data"]
                 channel = next(iter(channels), None)
-                filename = self.username + " - " + datetime.datetime.now() \
-                    .strftime("%Y-%m-%d %Hh%Mm%Ss") + " - " + channel.get("title") + ".mp4"
+
+                date_now = datetime.datetime.now().strftime("%Y-%m-%d %Hh%Mm%Ss")
+                filename = self.username + " - " + date_now + " - " + channel.get("title") + ".mp4"
 
                 # clean filename from unnecessary characters
                 filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
+                filename_folder = slugify(date_now)
 
-                recorded_filename = os.path.join(recorded_path, filename)
-                processed_filename = os.path.join(processed_path, filename)
+                recorded_filename = os.path.join(recorded_path, filename_folder, filename)
+                processed_filename = os.path.join(processed_path, filename_folder, filename)
 
                 # set oauth token if available (to skip ads)
                 auth_header = []
