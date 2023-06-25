@@ -1,6 +1,10 @@
 # twitch-stream-recorder
 A Docker container to automatically record Twitch streams.
 
+## Added by CanardConfit
+
+> Streams are saved in a single folder separate from the others instead of a general folder.
+
 ## Description
 This repository hosts the source code for a Docker container that can automatically record livestreams from Twitch as they go live.
 The main component is from [Ancalentari Twitch Stream Recorder](https://github.com/ancalentari/twitch-stream-recorder).
