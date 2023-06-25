@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 import enum
 import getopt
 import logging
@@ -61,6 +62,7 @@ class TwitchRecorder:
         # user configuration
         self.username = config.username
         self.quality = config.quality
+        self.time_zone = config.time_zone
 
         # twitch configuration
         self.client_id = config.client_id
@@ -103,10 +105,12 @@ class TwitchRecorder:
             for f in video_list:
                 recorded_filename = os.path.join(recorded_path, f)
                 processed_filename = os.path.join(processed_path, f)
+                recorded_folder = os.path.join(recorded_path, os.path.dirname(processed_filename))
                 processed_folder = os.path.join(processed_path, os.path.dirname(processed_filename))
                 if os.path.exists(processed_folder) is False:
                     os.makedirs(processed_folder)
                 self.process_recorded_file(recorded_filename, processed_filename)
+                os.remove(recorded_folder)
         except Exception as e:
             logging.error(e)
 
@@ -173,7 +177,7 @@ class TwitchRecorder:
                 channels = info["data"]
                 channel = next(iter(channels), None)
 
-                date_now = datetime.datetime.now().strftime("%Y-%m-%d %Hh%Mm%Ss")
+                date_now = datetime.datetime.now(tz=ZoneInfo(self.time_zone)).strftime("%Y-%m-%d %Hh%Mm%Ss")
                 filename = self.username + " - " + date_now + " - " + channel.get("title") + ".mp4"
 
                 # clean filename from unnecessary characters
