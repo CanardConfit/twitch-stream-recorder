@@ -110,7 +110,7 @@ class TwitchRecorder:
                 if os.path.exists(processed_folder) is False:
                     os.makedirs(processed_folder)
                 self.process_recorded_file(recorded_filename, processed_filename)
-                os.remove(recorded_folder)
+                os.rmdir(recorded_folder)
         except Exception as e:
             logging.error(e)
 
